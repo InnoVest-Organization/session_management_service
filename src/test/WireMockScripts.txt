@@ -1,0 +1,43 @@
+Command Prompt:
+
+# Start Investor Service mock (port 5006)
+java -jar wiremock-jre8-standalone-2.35.0.jar --port 5006
+
+# Open a new terminal and start Notification Service mock (port 5005)
+java -jar wiremock-jre8-standalone-2.35.0.jar --port 5005
+
+Power Shell:
+
+ $body = @{
+     request = @{
+         method = "POST"
+         url    = "/api/investors/match"
+    }
+    response = @{
+        status = 200
+        body   = '["investor1@example.com", "investor2@example.com"]'
+        headers = @{ "Content-Type" = "application/json" }
+    } } | ConvertTo-Json -Depth 10
+ Invoke-RestMethod -Uri "http://localhost:5006/__admin/mappings/new" -Method Post -Headers @{"Content-Type"="application/json"} -Body $body
+
+
+ $body = @{
+     request = @{
+        method = "POST"
+        url    = "/api/start_notifications"
+     }
+     response = @{
+        status  = 200
+         body    = "Notifications sent successfully"
+         headers = @{ "Content-Type" = "application/json" }
+     }
+ } | ConvertTo-Json -Depth 10
+
+ Invoke-RestMethod -Uri "http://localhost:5005/__admin/mappings/new" -Method Post -Headers @{"Content-Type"="application/json"} -Body $body
+
+
+Command Prompt:
+
+curl -X GET "http://localhost:5006/__admin/requests"
+
+curl -X DELETE "http://localhost:5006/__admin/requests"
