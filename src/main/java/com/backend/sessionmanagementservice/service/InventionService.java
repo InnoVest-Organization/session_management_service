@@ -72,7 +72,7 @@ public class InventionService {
     }
 
     private List<String> getInvestorEmails(Long inventionId, List<String> aoi, String paymentPackage) {
-        String investorServiceUrl = "http://localhost:5006/api/investors/match";
+        String investorServiceUrl = "http://localhost:6000/api/investors/match";
 
         InvestorMatchRequest request = new InvestorMatchRequest(inventionId, aoi, paymentPackage);
 
@@ -88,7 +88,7 @@ public class InventionService {
 
     private String sendNotifications(List<String> emails, Long inventionId, String productDescription,
             LocalDate bidStartDate, LocalTime bidStartTime, LocalTime bidEndTime) {
-        String notificationServiceUrl = "http://localhost:5005/api/start_notifications";
+        String notificationServiceUrl = "http://localhost:6000/api/notifications/startbid";
 
         NotificationRequest request = new NotificationRequest(emails, inventionId, productDescription, bidStartDate,
                 bidStartTime, bidEndTime);
