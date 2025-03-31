@@ -13,6 +13,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import java.util.ArrayList;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -71,6 +73,7 @@ public class InventionService {
         }
     }
 
+    @CircuitBreaker(name = "session", fallbackMethod = "getInvestorEmailsFallback")
     private List<String> getInvestorEmails(Long inventionId, List<String> aoi, String paymentPackage) {
         String investorServiceUrl = "http://localhost:5006/api/investors/match";
 
@@ -84,6 +87,11 @@ public class InventionService {
                 });
 
         return response.getBody();
+    }
+
+    private List<String> getInvestorEmailsFallback(Long inventionId, List<String> aoi, String paymentPackage,
+            Exception ex) {
+        return new ArrayList<>();
     }
 
     private String sendNotifications(List<String> emails, Long inventionId, String productDescription,
