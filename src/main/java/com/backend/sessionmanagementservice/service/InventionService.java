@@ -2,6 +2,7 @@ package com.backend.sessionmanagementservice.service;
 
 import com.backend.sessionmanagementservice.dto.InvestorMatchRequest;
 import com.backend.sessionmanagementservice.dto.NotificationRequest;
+import com.backend.sessionmanagementservice.event.StartBidEvent;
 import com.backend.sessionmanagementservice.model.Invention;
 import com.backend.sessionmanagementservice.repository.InventionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.kafka.core.KafkaTemplate;
 import java.util.ArrayList;
 
 import java.time.LocalDate;
@@ -21,7 +25,9 @@ import java.time.LocalTime;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class InventionService {
+    private final KafkaTemplate<String, StartBidEvent> kafkaTemplate;
 
     @Autowired
     private InventionRepository inventionRepository;
@@ -96,12 +102,20 @@ public class InventionService {
 
     private String sendNotifications(List<String> emails, Long inventionId, String productDescription,
             LocalDate bidStartDate, LocalTime bidStartTime, LocalTime bidEndTime) {
-        String notificationServiceUrl = "http://localhost:5005/api/notifications/startbid";
 
-        NotificationRequest request = new NotificationRequest(emails, inventionId, productDescription, bidStartDate,
-                bidStartTime, bidEndTime);
-        ResponseEntity<String> res = restTemplate.postForEntity(notificationServiceUrl, request, String.class);
-        return res.getBody();
+        StartBidEvent newbid = new StartBidEvent(emails, inventionId, productDescription, bidStartDate, bidStartTime,
+                bidEndTime);
+        kafkaTemplate.send("start-bid", newbid);
+        System.out.println("Sent the message");
+        // String notificationServiceUrl =
+        // "http://localhost:5005/api/notifications/startbid";
+
+        // NotificationRequest request = new NotificationRequest(emails, inventionId,
+        // productDescription, bidStartDate,
+        // bidStartTime, bidEndTime);
+        // ResponseEntity<String> res =
+        // restTemplate.postForEntity(notificationServiceUrl, request, String.class);
+        return "Added to the kafka topic";
     }
 
     private boolean isInventionLive(Invention invention, LocalDate currentDate, LocalTime currentTime) {
