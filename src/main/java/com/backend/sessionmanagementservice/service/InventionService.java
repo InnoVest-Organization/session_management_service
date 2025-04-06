@@ -5,6 +5,9 @@ import com.backend.sessionmanagementservice.dto.NotificationRequest;
 import com.backend.sessionmanagementservice.event.StartBidEvent;
 import com.backend.sessionmanagementservice.model.Invention;
 import com.backend.sessionmanagementservice.repository.InventionRepository;
+
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.common.header.internals.RecordHeader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -105,7 +108,11 @@ public class InventionService {
 
         StartBidEvent newbid = new StartBidEvent(emails, inventionId, productDescription, bidStartDate, bidStartTime,
                 bidEndTime);
-        kafkaTemplate.send("start-bid", newbid);
+        ProducerRecord<String, StartBidEvent> record = new ProducerRecord<>("start-bid", newbid);
+        record.headers().add(new RecordHeader("type", "startBid".getBytes()));
+
+        kafkaTemplate.send(record);
+
         System.out.println("Sent the message");
         // String notificationServiceUrl =
         // "http://localhost:5005/api/notifications/startbid";
